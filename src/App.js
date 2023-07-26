@@ -9,6 +9,7 @@ function App() {
   ];
 
   const [products, setProducts] = useState(initialProducts);
+  const [cartItems, setCartItems] = useState([]);
 
   function increase(index) {
     const updatedProducts = [...products];
@@ -21,7 +22,8 @@ function App() {
     if (updatedProducts[index].count >= 2) {
       updatedProducts[index].count -= 1;
     } else {
-      updatedProducts[index].showButtons = false; 
+      updatedProducts[index].showButtons = false;
+      updatedProducts[index].count = 0; // Reset count to 0 when clearing
     }
     setProducts(updatedProducts);
   }
@@ -31,12 +33,28 @@ function App() {
     updatedProducts[index].showButtons = true;
     updatedProducts[index].count = 1;
     setProducts(updatedProducts);
+
+    // Add the index of the product to the cartItems state
+    setCartItems([...cartItems, index]);
   }
 
-  
-  // function totalCost(index) {
-  //   return products[index].count * products[index].cost;
-  // }
+  function totalCost(index) {
+    return products[index].count * products[index].cost; // Use products array, not cartItems
+  }
+
+  function clear(index) {
+    const updatedCartItems = cartItems.filter((_, i) => i !== index);
+    setCartItems(updatedCartItems);
+
+    // Update the products array to clear the corresponding product
+    setProducts((prevProducts) => {
+      const updatedProducts = [...prevProducts];
+      const productIndex = cartItems[index];
+      updatedProducts[productIndex].showButtons = false;
+      updatedProducts[productIndex].count = 0;
+      return updatedProducts;
+    });
+  }
 
   return (
     <div className="App">
@@ -49,15 +67,29 @@ function App() {
               <button onClick={() => addToCart(index)}>Add to cart</button>
             ) : (
               <div>
-                <button onClick={decrease.bind(null, index)}>-</button>
+                <button onClick={() => decrease(index)}>-</button>
                 {product.count}
-                <button onClick={increase.bind(null, index)}>+</button>
+                <button onClick={() => increase(index)}>+</button>
               </div>
             )}
           </div>
         ))}
       </div>
-      <div className="cart"></div>
+      <div className="cart">
+        {!cartItems.length ? null : (
+          <div className="cart-display">
+            {cartItems.map((cartItemIndex, index) => (
+              <div className="cart-item" key={index}>
+                <h2>
+                  {products[cartItemIndex].name} : {products[cartItemIndex].count}
+                </h2>
+                <h1>{totalCost(cartItemIndex)}</h1>
+                <button onClick={() => clear(index)}>Clear</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
